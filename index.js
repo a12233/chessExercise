@@ -10,10 +10,6 @@ const lichessApi = 'https://lichess.org/api'
 console.log(__filename)
 console.log(__dirname)
 
-const options = {
-    url:'https://lichess.org/api/account',
-    headers: { 'Authorization': 'Bearer ' + personalToken }
-}
 // request.get(lichessApi+'/account', function(err, res, body){ console.log(body) } ).auth(null, null, true, personalToken);
 
 
@@ -35,6 +31,6 @@ const getGames = {
 //     // console.log(error)
 // }).pipe(fs.createWriteStream(__dirname+'/gameData/game1.pgn'));
 
-request.get(lichessApi+'/games/user/a12233?max=1&tags=false', function(err, res){
+request.get(lichessApi+'/games/user/a12233?max=10&tags=false', function(err, res){
     console.log(res.body)
-}).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/game1.pgn'));
+}).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/game2.pgn'));
