@@ -3,7 +3,7 @@ const fs = require('fs');
 const express = require('express')
 var Chess = require('chess.js').Chess;
 var Fgets = require('qfgets');
-var readline = require('linebyline'),
+var readline = require('linebyline');
 const app = express()
 const port = 3000;
 app.set('view engine', 'ejs');
