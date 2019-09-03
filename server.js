@@ -2,6 +2,8 @@ const request = require('request');
 const fs = require('fs');
 const express = require('express')
 var Chess = require('chess.js').Chess;
+var Fgets = require('qfgets');
+var readline = require('linebyline'),
 const app = express()
 const port = 3000;
 app.set('view engine', 'ejs');
@@ -36,7 +38,31 @@ function getAccountDetails(){
 function getAllMyGames(){
     request.get(lichessApi+'/games/user/a12233', function(err, res){
         console.log(res.body)
-    }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/game2.pgn'));
+    }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/allgames.txt'));
+}
+//extract relevant data and write to another file, eventually write to DB 
+function parsingAllGamesFiles(){
+    var fp = new Fgets('gameData/allgames.txt');
+    var content = "";
+    return readlines();
+    function readlines() {
+        try {
+            for (var i=0; i<20; i++) {
+                var line = fp.fgets();
+                contents += line;
+                if (line.inclues("Site") ) console.log(line);
+            }
+            if (fp.feof()) return callback(null, contents);
+            else setImmediate(readlines);
+        }
+        catch (err) {
+            return callback(err);
+        }
+    }
+    function callback(a, b){
+        console.log(a+b)
+    }
+
 }
 
 function loadOneGame(){
