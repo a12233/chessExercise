@@ -1,0 +1,29 @@
+<!-- views/pages/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+</head>
+<body class="container">
+
+<header>
+    <% include ../partials/header %>
+</header>
+
+<main>
+    <div >
+        <h2><%= obj.id %></h2>
+        <p><%="classical: " + obj.perfs.classical.rating %> </p>
+        <p><%= "rapid: " + obj.perfs.rapid.rating %> </p>
+        <script>lichess_widgets.profile_big("light", "a12233", "My Lichess");</script>
+
+    </div>
+</main>
+
+<footer>
+    <% include ../partials/footer %>
+</footer>
+
+</body>
+</html>
