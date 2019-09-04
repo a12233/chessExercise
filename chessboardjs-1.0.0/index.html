@@ -1,0 +1,41 @@
+<html>
+<head>
+<!--  Including the chessboardjs files:-->
+    <script src="./js/chessboard-1.0.0.js"></script>
+    <link rel="stylesheet" href="css/chessboard-1.0.0.min.css">
+
+<!--  Including jQuery, another tool chessboardjs uses:-->
+    <script src="https://code.jquery.com/jquery-3.3.1.js" ></script>
+</head>
+
+<body>
+  <base href="http://chessboardjs.com/" />
+  <div id="board" style="width: 400px"></div>
+  <input type="button" id="startPositionBtn" value="Start Position" />
+<input type="button" id="move1Btn" value="e2-e4" />
+<input type="button" id="move2Btn" value="d2-d4, g8-f6" />
+
+<input type="button" id="move3Btn" value="FEN Move" />
+    </body>
+
+  <script>
+var board = new ChessBoard('board', 'start');
+
+$('#startPositionBtn').on('click', board.start);
+
+$('#move1Btn').on('click', function() {
+  board.move('e2-e4');
+});
+
+$('#move2Btn').on('click', function() {
+  board.move('d2-d4', 'g8-f6');
+});
+    
+$('#move3Btn').on('click', function() {
+  var ruyLopez = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R';
+   var ruyLopez = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R';
+   var board = new ChessBoard('board', ruyLopez);
+  
+});
+  </script>
+</html>
