@@ -7,10 +7,34 @@ var readline = require('linebyline');
 const app = express()
 const port = 3000;
 app.set('view engine', 'ejs');
+const jsdom = require('jsdom')
+app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist/'));
+
+
+function test(){
+    const {JSDOM} = jsdom;
+
+    var text = 
+    `    <div id="myBoard" style="width: 400px"></div>
+    <script src="js/jquery-3.4.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous"></script>
+    <script>
+    var board = Chessboard('myBoard')
+    </script>`
+
+    const dom = new JSDOM(text);
+    const $ = (require('jquery'))(dom.window);
+    var ruyLopez = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R'
+    // var board = Chessboard('myBoard', ruyLopez)
+}
 
 
 app.get('/', function(req, res) {
-    res.render('pages/index');
+    // test()
+    var fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R'
+    res.render('pages/index', {
+        "fen":fen
+    });
 });
 
 app.get('/game', function(req, res) {
