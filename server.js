@@ -9,6 +9,8 @@ const port = 3000;
 app.set('view engine', 'ejs');
 const jsdom = require('jsdom')
 app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist/'));
+app.use('/test', express.static(__dirname + '/PgnViewerJS-0.9.8'));
+
 
 
 function test(){
@@ -35,6 +37,10 @@ app.get('/', function(req, res) {
     res.render('pages/index', {
         "fen":fen
     });
+});
+
+app.get('/test', function(req, res){
+    res.render('pages/test')
 });
 
 app.get('/game', function(req, res) {

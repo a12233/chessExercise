@@ -27,10 +27,8 @@
         <div id="board" style="width: 400px"></div>
     </div>
     <script>
-        <% console.log(fen) %>;
-        var board = new ChessBoard('board', <%- fen %> ); 
+        var board = new ChessBoard('board', <%- "'"+fen+"'" %> ); 
     </script>
-
 </main>
 
 <footer>
