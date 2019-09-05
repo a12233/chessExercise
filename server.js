@@ -8,8 +8,9 @@ const app = express()
 const port = 3000;
 app.set('view engine', 'ejs');
 const jsdom = require('jsdom')
-app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist/'));
 app.use('/test', express.static(__dirname + '/PgnViewerJS-0.9.8'));
+app.use('/', express.static(__dirname + '/chessboardjs-1.0.0/'));
+
 
 
 
