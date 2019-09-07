@@ -9,7 +9,7 @@ const port = 3000;
 app.set('view engine', 'ejs');
 const jsdom = require('jsdom')
 app.use('/test', express.static(__dirname + '/PgnViewerJS-0.9.8'));
-app.use('/', express.static(__dirname + '/chessboardjs-1.0.0/'));
+app.use('/board', express.static(__dirname + '/chessboardjs-1.0.0/'));
 
 
 
@@ -31,17 +31,30 @@ function test(){
     // var board = Chessboard('myBoard', ruyLopez)
 }
 
-
 app.get('/', function(req, res) {
     // test()
+    res.render('pages/index');
+});
+
+app.get('/board', function(req, res) {
+    // test()
     var fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R'
-    res.render('pages/index', {
+    res.render('pages/board', {
         "fen":fen
     });
 });
 
-app.get('/test', function(req, res){
-    res.render('pages/test')
+app.get('/test',  async function(req, res){
+    var data = ''
+    await getLatestGame()
+    data = await fs.readFileSync(__dirname+'/gameData/latest.txt'), (err, data) => {
+        if (err) throw err;
+        return data 
+    }
+    res.render('pages/test', {
+        "data":data.toString('ascii').trim()
+    })
+
 });
 
 app.get('/game', function(req, res) {
@@ -93,6 +106,14 @@ function parsingAllGamesFiles(){
     function callback(a, b){
         console.log(a+b)
     }
+
+}
+ async function getLatestGame(){
+     return new Promise(resolve => {
+        request.get(lichessApi+'/games/user/a12233?max=1&tags=false', function(err, res){
+            console.log("test")
+        }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/latest.txt').on('finish',resolve));
+     })
 
 }
 

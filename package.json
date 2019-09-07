@@ -26,6 +26,7 @@
     "jsdom": "^15.1.1",
     "lichess-api": "^1.0.2",
     "linebyline": "^1.3.0",
-    "qfgets": "^1.1.1"
+    "qfgets": "^1.1.1",
+    "util": "^0.12.1"
   }
 }
