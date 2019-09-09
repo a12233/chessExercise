@@ -63,7 +63,7 @@ app.get('/game', function(req, res) {
     res.status(200).json({message: "creating fen table"});
 });
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+app.listen(process.env.PORT || 3000, () => console.log(`Example app listening on port ${port}!`))
 
 /* Create your personal token on https://lichess.org/account/oauth/token */
 const personalToken = 'c1y34MTOM1IGp3i9';
