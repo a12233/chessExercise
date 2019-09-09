@@ -39,6 +39,7 @@ app.get('/', function(req, res) {
 app.get('/board', function(req, res) {
     // test()
     var fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R'
+    // parsingAllGamesFiles()
     res.render('pages/board', {
         "fen":fen
     });
@@ -87,14 +88,14 @@ function getAllMyGames(){
 //extract relevant data and write to another file, eventually write to DB 
 function parsingAllGamesFiles(){
     var fp = new Fgets('gameData/allgames.txt');
-    var content = "";
+    var contents = "";
     return readlines();
     function readlines() {
         try {
-            for (var i=0; i<20; i++) {
+            for (var i=0; i<20; i++) { //lines per game
                 var line = fp.fgets();
                 contents += line;
-                if (line.inclues("Site") ) console.log(line);
+                if (line.includes("Site") ) console.log(line); //get gameId
             }
             if (fp.feof()) return callback(null, contents);
             else setImmediate(readlines);
@@ -104,14 +105,14 @@ function parsingAllGamesFiles(){
         }
     }
     function callback(a, b){
-        console.log(a+b)
+        // console.log(a+b)
     }
 
 }
- async function getLatestGame(){
+async function getLatestGame(){
      return new Promise(resolve => {
         request.get(lichessApi+'/games/user/a12233?max=1&tags=false', function(err, res){
-            console.log("test")
+            // console.log("test")
         }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/latest.txt').on('finish',resolve));
      })
 
