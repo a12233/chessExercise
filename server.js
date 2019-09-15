@@ -42,7 +42,7 @@ const pool = new Pool({
 //   port: 5432,
 // })
 
-const getGames = (request, response) => {
+const getGames = async (request, response) => {
     try{
         const client = await pool.connect()
         const result = await client.query('SELECT * FROM mygames');
