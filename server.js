@@ -74,8 +74,8 @@ app.get('/db', async (req, res) => {
       const client = await pool.connect()
       const result = await client.query('SELECT * FROM mygames');
       const results = { 'results': (result) ? result.rows : null};
-      res.status(200).json(results.rows)
-    client.release();
+      res.json(results.rows)
+      client.release();   
     } catch (err) {
       console.error(err);
       res.send("Error " + err);
