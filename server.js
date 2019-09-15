@@ -12,7 +12,7 @@ const jsdom = require('jsdom')
 // const https = require('https');
 
 
-app.use('/test', express.static(__dirname + '/PgnViewerJS-0.9.8'));
+app.use('/latestGame', express.static(__dirname + '/PgnViewerJS-0.9.8'));
 app.use('/board', express.static(__dirname + '/chessboardjs-1.0.0/'));
 
 app.listen(process.env.PORT || port, () => console.log(`Example app listening on port ${port}!`))
@@ -24,23 +24,29 @@ const lichessApi = 'https://lichess.org/api'
 console.log(__filename)
 console.log(__dirname)
 
+const env = process.env.NODE_ENV || 'local';
+
 
 //postgres
 
 const { Pool } = require('pg');
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: true
-});
-
-// const Pool = require('pg').Pool
-// const pool = new Pool({
-//   user: 'rex',
-//   host: 'localhost',
-//   database: 'chess',
-//   password: 'admin',
-//   port: 5432,
-// })
+let connectionString = {};
+if (env === 'local') {
+    connectionString = {
+        user: 'rex',
+        host: 'localhost',
+        database: 'chess',
+        password: 'admin',
+        port: 5432,
+      };
+} else {
+    connectionString = {
+        connectionString: process.env.DATABASE_URL,
+        ssl: true
+    };
+}
+const pool = new Pool(connectionString);
+// pool.on('connect', () => console.log('connected to db'));
 
 const getGames = async (request, response) => {
     try{
