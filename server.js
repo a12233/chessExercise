@@ -78,12 +78,7 @@ function insertGame(id, moves, color) {
 app.get('/db', async (req, res) => {
     try {
     const data = await pool.query('SELECT * FROM mygames');         
-
-    //   const client = await pool.query('SELECT * FROM mygames');
-    //   const result = await client.query('SELECT * FROM mygames');
-    //   const results = { 'results': (result) ? result.rows : null};
       res.render('pages/games', {"gameData": data.rows}) 
-    //   client.release();   
     } catch (err) {
       console.error(err);
       res.send("Error " + err);
