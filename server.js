@@ -26,22 +26,39 @@ console.log(__dirname)
 
 
 //postgres
-const Pool = require('pg').Pool
+
+const { Pool } = require('pg');
 const pool = new Pool({
-  user: 'rex',
-  host: 'localhost',
-  database: 'chess',
-  password: 'admin',
-  port: 5432,
-})
+  connectionString: process.env.DATABASE_URL,
+  ssl: true
+});
+
+// const Pool = require('pg').Pool
+// const pool = new Pool({
+//   user: 'rex',
+//   host: 'localhost',
+//   database: 'chess',
+//   password: 'admin',
+//   port: 5432,
+// })
 
 const getGames = (request, response) => {
-    pool.query('SELECT * FROM mygames', (error, results) => {
-      if (error) {
-        throw error
+    try{
+        const client = await pool.connect()
+        const result = await client.query('SELECT * FROM mygames');
+        const results = { 'results': (result) ? result.rows : null};
+        response.status(200).json(results.rows)
+        client.release();
+    }catch (err) {
+        console.error(err);
+        res.send("Error " + err);
       }
-      response.status(200).json(results.rows)
-    })
+    // pool.query('SELECT * FROM mygames', (error, results) => {
+    //   if (error) {
+    //     throw error
+    //   }
+    //   response.status(200).json(results.rows)
+    // })
   }
 
 function insertGame(id, moves, color) {
@@ -51,12 +68,16 @@ function insertGame(id, moves, color) {
         }
     })
 }
-
 app.get('/allGames', getGames);
 
 app.get('/', async function(req, res) {
     res.render('pages/index');
 });
+
+app.get('/test', async function(req, res) {
+    res.render('pages/test');
+});
+
 
 app.get('/board', function(req, res) {
     var fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R'
@@ -65,11 +86,11 @@ app.get('/board', function(req, res) {
     });
 });
 
-app.get('/test', async (req, res) => {
+app.get('/latestGame', async (req, res) => {
     var id = 'qwKH00va'
     id = await getLatestGame() 
     const data = await pool.query('SELECT * FROM mygames WHERE id=$1', [id]);         
-    return res.render('pages/test', {
+    return res.render('pages/latestGame', {
             "data":data.rows[0].moves
         })
 });
@@ -102,34 +123,6 @@ const oneGame = (request, response, id) => {
         // console.log(results.rows[0].moves) 
         })         
   }
-async function getOneGame(id) {
-    pool.query('SELECT * FROM mygames WHERE id=$1',[id], (error, results) => {
-        if (error) {
-            throw error
-        }
-        // console.log(results.rows[0].moves) 
-        })         
-  }
-
-function loadOneGame(){
-    fs.readFile('gameData/game.pgn', (err, data) => {
-        if (err) throw err;
-        // console.log(data.toString());
-        var chess = new Chess(); 
-        chess.load_pgn(data.toString());
-        moves = chess.history()
-        console.log(moves)
-        var chess1 = new Chess();
-        var stream = fs.createWriteStream("gameFen.txt", {flags:'a'});
-        var iter = 0 
-        for(var iter = 0; iter< moves.length; iter++){
-            chess1.move(moves[iter]);
-            fen = chess1.fen()
-            stream.write(fen+"\n")
-        }
-        console.log(chess.fen()) //ending position 
-      });
-}
 
 // app.get('/game', function(req, res) {
 //     loadOneGame()

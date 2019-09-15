@@ -18,13 +18,9 @@
         <!-- <base href="http://localhost:3000" /> -->
         <div id="board1" ></div> 
     <script>
-        pgnView('board1',{ pgn:<%- "'"+data+"'" %> , pieceStyle: 'merida' , theme: 'chesscom',width: '200px', boardSize: '400px'});
+        pgnEdit('board1',{ pgn:'1. e4 e5 2. Nf3 Nc6 3. Nc3 Bc5 4. Nxe5 Nxe5 5. d4 Nd3+ 6. Qxd3 Bb4 7. a3 Bxc3+ 8. Qxc3 Nf6 9. Bd3 O-O 10. O-O d6 11. Bg5 Qe8 12. Bxf6 gxf6 13. Rae1 Qd7 14. d5 Re8 15. Qxf6 Qg4 16. Re3 b6 17. Rg3 c5 18. Rxg4+ Bxg4 19. f3 Bh5 20. g4 Bg6 21. Qxd6 Rad8 22. Qg3 Rb8 23. e5 c4 24. Bxg6 fxg6 25. c3 Red8 26. Rd1 b5 27. f4 Rdc8 28. Qh4 b4 29. axb4 Ra8 30. f5 gxf5 31. gxf5 Kh8 32. f6 a5 33. Qg4 Rg8 34. Qxg8+ Rxg8+ 35. Kh1 Rg5 36. f7 Rxe5 37. f8=Q# 1-0' , pieceStyle: 'merida' , theme: 'chesscom',width: '200px', boardSize: '400px'});
     </script>
 </main>
-
-<!-- //pgn = '[White "Anderssen, Adolf"][Black "Dufresne, Jean"] 1. e4 e5 2. Nf3 Nc6  3.Bc4 Bc5 4.b4 Bxb4 5.c3 Ba5 6.d4 exd4 7.O-O d3 8.Qb3 Qf6 9.e5 Qg6 10.Re1 Nge7 11.Ba3 b5 12.Qxb5 Rb8 13.Qa4 Bb6 14.Nbd2 Bb7 15.Ne4 Qf5 16.Bxd3 Qh5 17.Nf6+ gxf6 18.exf6 Rg8 19.Rad1 Qxf3 20.Rxe7+ Nxe7 21.Qxd7+ Kxd7 22.Bf5+ Ke8 23.Bd7+ Kf8 24. Bxe7# 1:0';
-pgnView('b1', {pgn: pgn, theme: 'chesscom', layout: 'left', width: '390px', boardSize: '200px',  movesWidth: '180px', scrollable: true, movesHeight: '220px'}); -->
-
 
 <footer>
     <% include ../partials/footer %>
