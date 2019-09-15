@@ -15,6 +15,11 @@
 </header>
 
 <main>
+        <div>
+            <h2>My lastest game on Lichess.org </h2>
+            <h4><%= 'I play '+color %></h4>
+        </div> 
+
         <div id="board1" ></div> 
     <script>
         pgnView('board1',{ pgn:<%- "'"+data+"'" %> , pieceStyle: 'merida' , theme: 'chesscom',width: '200px', boardSize: '400px'});

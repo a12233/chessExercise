@@ -11,7 +11,7 @@ const jsdom = require('jsdom')
 // const db = require('./query.js')
 // const https = require('https');
 
-
+app.use('/test', express.static(__dirname + '/PgnViewerJS-0.9.8'));
 app.use('/latestGame', express.static(__dirname + '/PgnViewerJS-0.9.8'));
 app.use('/board', express.static(__dirname + '/chessboardjs-1.0.0/'));
 
@@ -104,9 +104,10 @@ app.get('/board', function(req, res) {
 app.get('/latestGame', async (req, res) => {
     var id = 'qwKH00va'
     id = await getLatestGame() 
-    const data = await pool.query('SELECT * FROM mygames WHERE id=$1', [id]);         
+    const data = await pool.query('SELECT * FROM mygames WHERE id=$1', [id]); 
     return res.render('pages/latestGame', {
-            "data":data.rows[0].moves
+            "data":data.rows[0].moves,
+            "color":data.rows[0].color
         })
 });
 
