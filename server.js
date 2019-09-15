@@ -111,6 +111,7 @@ app.get('/latestGame', async (req, res) => {
         })
 });
 
+
  function getLatestGame(){
     return new Promise( (resolve) => {
         const options = {
