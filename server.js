@@ -68,7 +68,19 @@ function insertGame(id, moves, color) {
         }
     })
 }
-app.get('/allGames', getGames);
+// app.get('/allGames', getGames);
+app.get('/db', async (req, res) => {
+    try {
+      const client = await pool.connect()
+      const result = await client.query('SELECT * FROM mygames');
+      const results = { 'results': (result) ? result.rows : null};
+      response.status(200).json(results.rows)
+    client.release();
+    } catch (err) {
+      console.error(err);
+      res.send("Error " + err);
+    }
+  })
 
 app.get('/', async function(req, res) {
     res.render('pages/index');
