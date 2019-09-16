@@ -86,6 +86,7 @@ app.get('/db', async (req, res) => {
   })
 
 app.get('/', async function(req, res) {
+    getAllMyGames()
     res.render('pages/index');
 });
 
@@ -155,9 +156,18 @@ function getAccountDetails(){
 
 
 function getAllMyGames(){
-    request.get(lichessApi+'/games/user/a12233', function(err, res){
-        console.log(res.body)
-    }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/allgames.txt'));
+    const gameType = {
+
+    }
+    const options = {
+        url: lichessApi+'/games/user/a12233?perfType=rapid,classical&opening=true',
+        headers: {
+            'Accept': 'application/x-ndjson'
+        }
+      };
+    request.get(options, function(err, res){
+        // console.log(res.body)
+    }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/mygames.txt'));
 }
 //extract relevant data and write to another file, eventually write to DB 
 function parsingAllGamesFiles(){
