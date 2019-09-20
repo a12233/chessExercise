@@ -68,11 +68,15 @@ const getGames = async (request, response) => {
   }
 
 function insertGame(id, moves, color) {
-    pool.query('INSERT INTO mygames (id, moves, color) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [id, moves, color], (error, results) => {
-        if (error) {
-        throw error
-        }
+    return new Promise( (resolve)=>{
+        pool.query('INSERT INTO mygames (id, moves, color) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [id, moves, color], (error, results) => {
+            if (error) {
+            throw error
+            }
+        })
+        resolve("done")
     })
+
 }
 // app.get('/allGames', getGames);
 app.get('/db', async (req, res) => {
@@ -86,7 +90,8 @@ app.get('/db', async (req, res) => {
   })
 
 app.get('/', async function(req, res) {
-    getAllMyGames()
+    // getAllMyGames()
+
     res.render('pages/index');
 });
 
@@ -102,6 +107,10 @@ app.get('/board', function(req, res) {
     });
 });
 
+app.get('/refreshDB', (req, res)=>{
+    refreshDB()
+});
+
 app.get('/latestGame', async (req, res) => {
     var id = 'qwKH00va'
     id = await getLatestGame() 
@@ -111,9 +120,11 @@ app.get('/latestGame', async (req, res) => {
             "color":data.rows[0].color
         })
 });
+function refreshDB() {
+    parsingAllGamesFiles()
+}
 
-
- function getLatestGame(){
+function getLatestGame(){
     return new Promise( (resolve) => {
         const options = {
             url: lichessApi+'/games/user/a12233?max=1',
@@ -122,17 +133,18 @@ app.get('/latestGame', async (req, res) => {
             }
           };
         var id = ' '
-        request.get(options, (err, res)=> {
+        request.get(options, async (err, res)=> {
             id = JSON.parse(res.body).id
             var moves = JSON.parse(res.body).moves
             var color = ''
             if(JSON.parse(res.body).players.white.user.id == 'a12233') color = 'white'
             else color = 'black'
-            insertGame(id, moves, color);
+            await insertGame(id, moves, color);
             resolve(id)
         })
      })
 }
+
 const oneGame = (request, response, id) => {
     pool.query('SELECT * FROM mygames WHERE id=$1',[id], (error, results) => {
         if (error) {
@@ -156,30 +168,61 @@ function getAccountDetails(){
 
 
 function getAllMyGames(){
-    const gameType = {
+    return new Promise((resolve)=>{
+        const options = {
+            url: lichessApi+'/games/user/a12233?perfType=rapid,classical&opening=true',
+            headers: {
+                'Accept': 'application/x-ndjson'
+            }
+          };
+        request.get(options, function(err, res){
+            var obj = res.body
+        }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/testGames.txt'));
+        resolve('done')
+    })
 
-    }
-    const options = {
-        url: lichessApi+'/games/user/a12233?perfType=rapid,classical&opening=true',
-        headers: {
-            'Accept': 'application/x-ndjson'
-        }
-      };
-    request.get(options, function(err, res){
-        // console.log(res.body)
-    }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/mygames.txt'));
+}
+
+function insertAllGames(id, moves, color, data ) {
+    return new Promise( (resolve)=>{
+        pool.query('INSERT INTO games (id, moves, color, data) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING', [id, moves, color, data], (error, results) => {
+            
+            if (error) {
+                throw error
+            }
+        })
+        resolve("done")
+    })
+
 }
 //extract relevant data and write to another file, eventually write to DB 
 function parsingAllGamesFiles(){
-    var fp = new Fgets('gameData/allgames.txt');
+    var data = fs.readFileSync('gameData/10games.txt');
+    var jsonData = JSON.parse(data)
+    for(let i = 0; i < jsonData.length ; i++){
+        var obj = jsonData[i]
+        var color = ''
+        if(obj.players.white.user.id == 'a12233') color = 'white'
+        else color = 'black'
+        insertAllGames(obj.id, obj.moves, color, obj)
+    }
+
+}
+
+function testFgets(){
+    var fp = new Fgets('gameData/10games.txt');
     var contents = "";
     return readlines();
     function readlines() {
         try {
-            for (var i=0; i<20; i++) { //lines per game
+            for (var i=0; i<20; i++) { //one game per line 
                 var line = fp.fgets();
-                contents += line;
-                if (line.includes("Site") ) console.log(line); //get gameId
+                var obj = JSON.parse(line)
+                var id = obj.id
+                var data = line
+                var moves = obj.moves
+                var color = obj.players.white.user.id
+                insertAllGames(id, moves, color, data)
             }
             if (fp.feof()) return callback(null, contents);
             else setImmediate(readlines);
@@ -188,8 +231,7 @@ function parsingAllGamesFiles(){
             return callback(err);
         }
     }
-    function callback(a, b){
-        // console.log(a+b)
+    function callback(a){
+        console.log(a)
     }
 }
-
