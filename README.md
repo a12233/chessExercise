@@ -7,6 +7,14 @@ chess games I play on lichess.org.
 
 Currently, I do a REST call to get my lastest game, store that game in Postgres, and finally display that game with PgnViewerJS. 
 
+TODO: 
+FEN frequency -- be able to see the highest frequency opening positions I end up in
+DB table by color -- all white games and black games in seperate tables
+Adding engine evaluation to positions
+biggest change in engine eval positions flagged
+Opening tables
+Endgame positions won/lost
+
 
 Reference Links: 
 https://chess.stackexchange.com/questions/17005/engine-output-fen-string-when-blundering?rq=1
