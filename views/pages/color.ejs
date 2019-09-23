@@ -1,0 +1,50 @@
+<!-- views/pages/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+
+</head>
+<body class="container">
+
+<header>
+    <% include ../partials/header %>
+</header>
+<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<link href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+<script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+
+<main>
+    <div >
+            <table id="example" class="display" cellspacing="0" width="100%">
+                    <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Moves</th>
+                            </tr>					
+                        </thead>
+            </table>		
+    </div>
+
+</main>
+<script>
+        $(document).ready(function() {
+            var dataset = <%-JSON.stringify(gameData) %>;
+            var myTable = $("#example").DataTable({
+                    data: dataset,
+                    columns: [
+                        { "data": "id" },
+                        { "data": "moves" }
+                    ],
+                    paging : false
+                    }
+                );
+            } );
+</script>
+<footer>
+    <% include ../partials/footer %>
+</footer>
+
+</body>
+</html>
