@@ -48,25 +48,6 @@ if (env === 'local') {
 const pool = new Pool(connectionString);
 // pool.on('connect', () => console.log('connected to db'));
 
-const getGames = async (request, response) => {
-    try{
-        const client = await pool.connect()
-        const result = await client.query('SELECT * FROM mygames');
-        const results = { 'results': (result) ? result.rows : null};
-        response.status(200).json(results.rows)
-        client.release();
-    }catch (err) {
-        console.error(err);
-        res.send("Error " + err);
-      }
-    // pool.query('SELECT * FROM mygames', (error, results) => {
-    //   if (error) {
-    //     throw error
-    //   }
-    //   response.status(200).json(results.rows)
-    // })
-  }
-
 function insertGame(id, moves, color) {
     return new Promise( (resolve)=>{
         pool.query('INSERT INTO mygames (id, moves, color) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [id, moves, color], (error, results) => {
@@ -89,9 +70,28 @@ app.get('/db', async (req, res) => {
     }
   })
 
-app.get('/', async function(req, res) {
-    // getAllMyGames()
+app.get('/white', async (req, res) => {
+    try {
+    const data = await pool.query('SELECT * FROM whiteGames');         
+    res.render('pages/color', {"gameData": data.rows}) 
+    } catch (err) {
+      console.error(err);
+      res.send("Error " + err);
+    }
+  })
 
+app.get('/black', async (req, res) => {
+try {
+const data = await pool.query('SELECT * FROM blackGames');         
+    res.render('pages/color', {"gameData": data.rows}) 
+} catch (err) {
+    console.error(err);
+    res.send("Error " + err);
+}
+})
+
+app.get('/', async function(req, res) {
+    // splitGames()
     res.render('pages/index');
 });
 
@@ -111,6 +111,10 @@ app.get('/refreshDB', (req, res)=>{
     refreshDB()
 });
 
+app.get('/viz', (req, res)=>{
+    res.render('pages/viz');
+});
+
 app.get('/latestGame', async (req, res) => {
     var id = 'qwKH00va'
     id = await getLatestGame() 
@@ -123,7 +127,7 @@ app.get('/latestGame', async (req, res) => {
 function refreshDB() {
     parsingAllGamesFiles()
 }
-
+//get lastest game from lichess api, insert into postgresDB, then send moves data to be displayed 
 function getLatestGame(){
     return new Promise( (resolve) => {
         const options = {
@@ -166,7 +170,7 @@ function getAccountDetails(){
     }).auth(null, null, true, personalToken);
 }
 
-
+//lichess api for restreaming games into file 
 function getAllMyGames(){
     return new Promise((resolve)=>{
         const options = {
@@ -196,7 +200,7 @@ function insertAllGames(id, moves, color, data ) {
 
 }
 //extract relevant data and write to another file, eventually write to DB 
-function parsingAllGamesFiles(){
+async function parsingAllGamesFiles(){
     var data = fs.readFileSync('gameData/10games.txt');
     var jsonData = JSON.parse(data)
     for(let i = 0; i < jsonData.length ; i++){
@@ -204,11 +208,54 @@ function parsingAllGamesFiles(){
         var color = ''
         if(obj.players.white.user.id == 'a12233') color = 'white'
         else color = 'black'
-        insertAllGames(obj.id, obj.moves, color, obj)
+        await insertAllGames(obj.id, obj.moves, color, obj)
     }
 
 }
+//split games by color 
+async function splitGames(){
+    const data = await pool.query('SELECT * FROM games');     
+    // console.log(data.rowCount)
+    // console.log(data.rows[0])
+    for( let i = 0; i < data.rowCount; i++){
+        var obj = data.rows[i]
+        if(obj.color == "white"){
+            await insertWhiteGames(obj.id, obj.moves, obj.data)
+        }
+        else{
+            await insertBlackGames(obj.id, obj.moves, obj.data)
+        }
+    }
+}
+function insertWhiteGames(id, moves, data ) {
+    return new Promise( (resolve)=>{
+        pool.query('INSERT INTO whiteGames (id, moves, data) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [id, moves, data], (error, results) => {
+            
+            if (error) {
+                throw error
+            }
+        })
+        resolve("done")
+    })
+}
+function insertBlackGames(id, moves, data ) {
+    return new Promise( (resolve)=>{
+        pool.query('INSERT INTO blackGames (id, moves, data) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [id, moves, data], (error, results) => {
+            
+            if (error) {
+                throw error
+            }
+        })
+        resolve("done")
+    })
+}
 
+
+//generate data on the frequency of fen position for the first 20 moves of my games
+function fenFrequency(){
+
+}
+//read file streaming 
 function testFgets(){
     var fp = new Fgets('gameData/10games.txt');
     var contents = "";

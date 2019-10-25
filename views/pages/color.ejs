@@ -22,7 +22,6 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Moves</th>
-                                <th>Color</th>
                             </tr>					
                         </thead>
             </table>		
@@ -32,13 +31,11 @@
 <script>
         $(document).ready(function() {
             var dataset = <%-JSON.stringify(gameData) %>;
-            <%- console.log(JSON.stringify(gameData)) %>
             var myTable = $("#example").DataTable({
                     data: dataset,
                     columns: [
                         { "data": "id" },
-                        { "data": "moves" },
-                        { "data": "color" }
+                        { "data": "moves" }
                     ],
                     paging : false
                     }
