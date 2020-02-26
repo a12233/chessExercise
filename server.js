@@ -14,6 +14,10 @@ const jsdom = require('jsdom')
 app.use('/test', express.static(__dirname + '/PgnViewerJS-0.9.8'));
 app.use('/latestGame', express.static(__dirname + '/PgnViewerJS-0.9.8'));
 app.use('/board', express.static(__dirname + '/chessboardjs-1.0.0/'));
+app.use('/playStockfish', express.static(__dirname + '/chessboardjs-1.0.0/'));
+app.use('/playStockfish', express.static(__dirname ));
+
+
 
 app.listen(process.env.PORT || port, () => console.log(`Example app listening on port ${port}!`))
 
@@ -60,6 +64,15 @@ function insertGame(id, moves, color) {
 
 }
 // app.get('/allGames', getGames);
+app.get('/playStockfish', async (req, res) => {
+    try {
+          res.render('pages/playStockfish') 
+        } catch (err) {
+          console.error(err);
+          res.send("Error " + err);
+        }
+})
+
 app.get('/db', async (req, res) => {
     try {
     const data = await pool.query('SELECT * FROM mygames');         
@@ -68,7 +81,7 @@ app.get('/db', async (req, res) => {
       console.error(err);
       res.send("Error " + err);
     }
-  })
+});
 
 app.get('/white', async (req, res) => {
     try {
