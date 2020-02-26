@@ -14,7 +14,9 @@ const jsdom = require('jsdom')
 app.use('/test', express.static(__dirname + '/PgnViewerJS-0.9.8'));
 app.use('/latestGame', express.static(__dirname + '/PgnViewerJS-0.9.8'));
 app.use('/board', express.static(__dirname + '/chessboardjs-1.0.0/'));
-app.use('/playStockfish', express.static(__dirname));
+app.use('/playStockfish', express.static(__dirname + '/chessboardjs-1.0.0/'));
+app.use('/playStockfish', express.static(__dirname ));
+
 
 
 app.listen(process.env.PORT || port, () => console.log(`Example app listening on port ${port}!`))
