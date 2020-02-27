@@ -3,13 +3,14 @@ const fs = require('fs');
 const express = require('express')
 var Chess = require('chess.js').Chess;
 var Fgets = require('qfgets');
-var readline = require('linebyline');
+var LineByLineReader = require('line-by-line');
 const app = express()
 const port = 3000;
 app.set('view engine', 'ejs');
 const jsdom = require('jsdom')
 // const db = require('./query.js')
 // const https = require('https');
+let pouch = require('./pouchDb.js');
 
 app.use('/test', express.static(__dirname + '/PgnViewerJS-0.9.8'));
 app.use('/latestGame', express.static(__dirname + '/PgnViewerJS-0.9.8'));
@@ -104,7 +105,8 @@ const data = await pool.query('SELECT * FROM blackGames');
 })
 
 app.get('/', async function(req, res) {
-    // splitGames()
+    // uploadToPouch()
+    // pouch.sync()
     res.render('pages/index');
 });
 
@@ -139,6 +141,28 @@ app.get('/latestGame', async (req, res) => {
 });
 function refreshDB() {
     parsingAllGamesFiles()
+}
+function uploadToPouch(){
+    lr = new LineByLineReader('gameData/feb2020.pgn');
+    lr.on('error', function (err) {
+       console.log(err)
+    });
+
+    lr.on('line', function (line) {
+        // pause emitting of lines...
+        lr.pause();
+
+        // ...do your asynchronous line processing..
+        setTimeout(function () {
+            pouch.addGame(line)
+            // ...and continue emitting lines.
+            lr.resume();
+        }, 100);
+    });
+
+    lr.on('end', function () {
+        console.log("done uploading")
+    });
 }
 //get lastest game from lichess api, insert into postgresDB, then send moves data to be displayed 
 function getLatestGame(){
@@ -194,7 +218,7 @@ function getAllMyGames(){
           };
         request.get(options, function(err, res){
             var obj = res.body
-        }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/testGames.txt'));
+        }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/feb2020.pgn'));
         resolve('done')
     })
 
@@ -214,7 +238,8 @@ function insertAllGames(id, moves, color, data ) {
 }
 //extract relevant data and write to another file, eventually write to DB 
 async function parsingAllGamesFiles(){
-    var data = fs.readFileSync('gameData/10games.txt');
+    lr = new LineByLineReader('gameData/testGames.txt');
+    var data = fs.readFileSync('');
     var jsonData = JSON.parse(data)
     for(let i = 0; i < jsonData.length ; i++){
         var obj = jsonData[i]
@@ -223,7 +248,6 @@ async function parsingAllGamesFiles(){
         else color = 'black'
         await insertAllGames(obj.id, obj.moves, color, obj)
     }
-
 }
 //split games by color 
 async function splitGames(){
