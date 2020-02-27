@@ -2,6 +2,7 @@ var PouchDB = require('pouchdb');
 var db = new PouchDB('my_database');
 var remoteCouch = 'http://admin:admin@localhost:5984/chess';
 PouchDB.plugin(require('pouchdb-upsert'));
+PouchDB.plugin(require('pouchdb-find'));
 module.exports = {
 addGame : function (gameString) {
     var game = {
