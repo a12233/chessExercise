@@ -16,6 +16,9 @@ Opening tables
 Endgame positions won/lost
 
 
+Added wasm stockfish (old version from 2018)
+TODO: pgdiff of local database and heroku version
+
 Reference Links: 
 https://chess.stackexchange.com/questions/17005/engine-output-fen-string-when-blundering?rq=1
 https://github.com/fsmosca/chess-artist
