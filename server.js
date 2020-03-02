@@ -8,6 +8,9 @@ const app = express()
 const port = 3000;
 app.set('view engine', 'ejs');
 const jsdom = require('jsdom')
+// const { Worker } = require('worker_threads');
+// const { workerData, parentPort } = require('worker_threads')
+
 // const db = require('./query.js')
 // const https = require('https');
 let pouch = require('./pouchDb.js');
@@ -60,7 +63,7 @@ function insertGame(id, moves, color) {
             throw error
             }
         })
-        resolve("done")
+        resolve(true)
     })
 
 }
@@ -107,6 +110,9 @@ const data = await pool.query('SELECT * FROM blackGames');
 app.get('/', async function(req, res) {
     // uploadToPouch()
     // pouch.sync()
+    // createFen("e4 e5 Nf3 Nc6 Bb5 Nd4 Bc4 Nxf3+ Qxf3 Nf6 Nc3 c6 d3 h6 Be3 Bd6 O-O-O O-O h4 a5 g4 b5 g5 Nh7 gxh6 g6 h5 bxc4 hxg6 fxg6 Qg4 Qf6 Rdg1 Be7 Qxg6+ Qxg6 Rxg6+ Kh8 Rhg1 cxd3 Rg8+ Rxg8")
+    // run().catch(err => console.error(err))
+    worker.postMessage("uciok");
     res.render('pages/index');
 });
 
@@ -116,7 +122,8 @@ app.get('/test', async function(req, res) {
 
 
 app.get('/board', function(req, res) {
-    var fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R'
+    // var fen = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R'
+    var fen = 'r1b3rk/3pb2n/2p4P/p3p3/4P3/2NpB3/PPP2P2/2K3R1 w - - 0 22'
     res.render('pages/board', {
         "fen":fen
     });
@@ -180,8 +187,11 @@ function getLatestGame(){
             var color = ''
             if(JSON.parse(res.body).players.white.user.id == 'a12233') color = 'white'
             else color = 'black'
-            await insertGame(id, moves, color);
-            resolve(id)
+            let flag = false 
+            flag = await insertGame(id, moves, color);
+            if(flag) {
+                resolve(id) 
+            }
         })
      })
 }
@@ -287,6 +297,18 @@ function insertBlackGames(id, moves, data ) {
     })
 }
 
+function createFen(pgn){
+    const chess = new Chess()
+    var chess1 = new Chess();
+    const startPos = chess1.fen();
+    chess.load_pgn(pgn);
+    let fens = chess.history().map(move => {
+        chess1.move(move);
+        return chess1.fen();
+      });
+    fens = [startPos, ...fens];
+    return JSON.stringify(fens)
+}
 
 //generate data on the frequency of fen position for the first 20 moves of my games
 function fenFrequency(){
@@ -319,3 +341,30 @@ function testFgets(){
         console.log(a)
     }
 }
+
+var Worker = require("tiny-worker");
+var worker = new Worker("stockfish.js");
+ 
+worker.onmessage = function (ev) {
+    console.log(ev.data);
+    worker.terminate();
+};
+ 
+
+function runService(workerData) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker('./service.js', { workerData });
+    worker.on('message', resolve);
+    worker.on('error', reject);
+    worker.on('exit', (code) => {
+      if (code !== 0)
+        reject(new Error(`Worker stopped with exit code ${code}`));
+    })
+  })
+}
+
+async function run() {
+  const result = await runService('world')
+  console.log(result);
+}
+
