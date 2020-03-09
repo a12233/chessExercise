@@ -33,6 +33,7 @@
     "pouchdb-find": "^7.2.1",
     "pouchdb-upsert": "^2.2.0",
     "qfgets": "^1.1.1",
+    "request-promise": "^4.2.5",
     "tiny-worker": "^2.3.0",
     "util": "^0.12.1"
   }

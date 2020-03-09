@@ -1,4 +1,4 @@
-const request = require('request');
+const request = require('request-promise');
 const fs = require('fs');
 const express = require('express')
 var Chess = require('chess.js').Chess;
@@ -28,7 +28,9 @@ app.use('/playStockfish', express.static(__dirname ));
 app.listen(process.env.PORT || port, () => console.log(`Example app listening on port ${port}!`))
 
 /* Create your personal token on https://lichess.org/account/oauth/token */
-const personalToken = 'c1y34MTOM1IGp3i9';
+// const personalToken = 'c1y34MTOM1IGp3i9';
+const personalTokenTest = 'S5zRQ8u1Annr2LUA'
+const username = 'a12233_test'
 const lichessApi = 'https://lichess.org/api'
 
 console.log(__filename)
@@ -58,17 +60,7 @@ if (env === 'local') {
 const pool = new Pool(connectionString);
 // pool.on('connect', () => console.log('connected to db'));
 
-function insertGame(id, moves, color) {
-    return new Promise( (resolve)=>{
-        pool.query('INSERT INTO mygames (id, moves, color) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [id, moves, color], (error, results) => {
-            if (error) {
-            throw error
-            }
-        })
-        resolve(true)
-    })
 
-}
 // app.get('/allGames', getGames);
 app.get('/playStockfish', async (req, res) => {
     try {
@@ -182,23 +174,36 @@ function uploadToPouch(){
 function getLatestGame(){
     return new Promise( (resolve) => {
         const options = {
-            url: lichessApi+'/games/user/a12233?max=1',
+            url: lichessApi+'/games/user/'+username+'?max=1',
             headers: {
                 'Accept': 'application/x-ndjson'
-            }
+            },
+            json: true
           };
-        var id = ' '
-        request.get(options, async (err, res)=> {
-            id = JSON.parse(res.body).id
-            var moves = JSON.parse(res.body).moves
+        request(options)
+        .then( async (response)=> {
+            id = response.id
+            var moves = response.moves
             var color = ''
-            if(JSON.parse(res.body).players.white.user.id == 'a12233') color = 'white'
-            else color = 'black'
-            let flag = false 
-            flag = await insertGame(id, moves, color);
-            if(flag) {
-                resolve(id) 
+            if(response.player == undefined || response.player == undefined){
+                color = 'test'
             }
+            else if(response.players.white.user.id == username){ 
+                color = 'white' 
+            }
+            else {
+                color = 'black'
+            }
+            try {
+                 flag = await pool.query('INSERT INTO mygames (id, moves, color) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [id, moves, color])
+                 if(flag) {
+                    resolve(id) 
+                }
+            }catch (e){
+                console.log(e.stack)
+                reject(e.stack)
+            }
+
         })
      })
 }
