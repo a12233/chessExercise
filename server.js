@@ -109,7 +109,6 @@ app.get('/', async function(req, res) {
     // worker.postMessage("uci");
     worker.postMessage('setoption name Ponder value false');
     worker.postMessage('setoption name MultiPV value 3');
-
     worker.postMessage('position fen r1b3rk/3pb2n/2p4P/p3p3/4P3/2NpB3/PPP2P2/2K3R1 w - - 0 22');
     // worker.postMessage('go movetime ' + '1000');
     
@@ -129,13 +128,13 @@ app.get('/board', function(req, res) {
     });
 });
 
-app.get('/refreshDB', (req, res)=>{
+app.get('/api/refreshDB', (req, res)=>{
     refreshDB()
 });
 
-app.get('/viz', (req, res)=>{
-    res.render('pages/viz');
-});
+// app.get('/viz', (req, res)=>{
+//     res.render('pages/viz');
+// });
 
 app.get('/latestGame', async (req, res) => {
     let id = await getLatestGame() 
@@ -145,11 +144,14 @@ app.get('/latestGame', async (req, res) => {
             "color":data.rows[0].color
         })
 });
-function refreshDB() {
-    parsingAllGamesFiles()
+async function refreshDB() {
+    let filepath = 'gameData/mar2020.pgn'
+    // parsingAllGamesFiles(filepath)
+    await getAllMyGames(filepath)
+    uploadToPouch(filepath)
 }
-function uploadToPouch(){
-    lr = new LineByLineReader('gameData/feb2020.pgn');
+function uploadToPouch(filepath){
+    lr = new LineByLineReader(filepath);
     lr.on('error', function (err) {
        console.log(err)
     });
@@ -230,20 +232,19 @@ function getAccountDetails(){
 }
 
 //lichess api for restreaming games into file 
-function getAllMyGames(){
+function getAllMyGames(filepath){
     return new Promise((resolve)=>{
         const options = {
-            url: lichessApi+'/games/user/a12233?perfType=rapid,classical&opening=true',
+            url: lichessApi+'/games/user/'+username+'?perfType=rapid,classical&opening=true',
             headers: {
                 'Accept': 'application/x-ndjson'
             }
           };
         request.get(options, function(err, res){
             var obj = res.body
-        }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/feb2020.pgn'));
+        }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/'+filepath));
         resolve('done')
     })
-
 }
 
 function insertAllGames(id, moves, color, data ) {
@@ -258,9 +259,10 @@ function insertAllGames(id, moves, color, data ) {
     })
 
 }
-//extract relevant data and write to another file, eventually write to DB 
-async function parsingAllGamesFiles(){
-    lr = new LineByLineReader('gameData/feb2020.pgn');
+//extract relevant data and write to another file, eventually write to postgres DB 
+async function parsingAllGamesFiles(filepath){
+    
+    lr = new LineByLineReader(filepath);
     lr.on('error', function (err) {
        console.log(err)
     });
@@ -272,12 +274,13 @@ async function parsingAllGamesFiles(){
         // ...do your asynchronous line processing..
         setTimeout(async function () {
             var jsonData = JSON.parse(line)
-            for(let i = 0; i < jsonData.length ; i++){
-                var obj = jsonData[i]
-                var color = ''
-                if(obj.players.white.user.id == 'a12233') color = 'white'
-                else color = 'black'
-                await insertAllGames(obj.id, obj.moves, color, obj)
+            if(jsonData.players.white.user.id == 'a12233') color = 'white' 
+            else color = 'black'
+            try {
+                await pool.query('INSERT INTO games (id, moves, color, data) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING', [jsonData.id, jsonData.moves, color, jsonData])
+            } 
+            catch (e){
+                console.log(e.stack)
             }
             // ...and continue emitting lines.
             lr.resume();
@@ -287,7 +290,6 @@ async function parsingAllGamesFiles(){
     lr.on('end', function () {
         console.log("done uploading")
     });
-
 }
 //split games by color 
 async function splitGames(){
@@ -325,19 +327,6 @@ function insertBlackGames(id, moves, data ) {
         })
         resolve("done")
     })
-}
-
-function createFen(pgn){
-    const chess = new Chess()
-    var chess1 = new Chess();
-    const startPos = chess1.fen();
-    chess.load_pgn(pgn);
-    let fens = chess.history().map(move => {
-        chess1.move(move);
-        return chess1.fen();
-      });
-    fens = [startPos, ...fens];
-    return JSON.stringify(fens)
 }
 
 //generate data on the frequency of fen position for the first 20 moves of my games

@@ -31,10 +31,8 @@
 </main>
 <script>
         $(document).ready(function() {
-            var dataset = <%-JSON.stringify(gameData) %>;
-            // <%- console.log(JSON.stringify(gameData)) %>
             var myTable = $("#example").DataTable({
-                    data: dataset,
+                    data: <%- JSON.stringify(gameData) %>,
                     columns: [
                         { "data": "id" },
                         { "data": "moves" },
