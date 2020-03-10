@@ -28,9 +28,9 @@ app.use('/playStockfish', express.static(__dirname ));
 app.listen(process.env.PORT || port, () => console.log(`Example app listening on port ${port}!`))
 
 /* Create your personal token on https://lichess.org/account/oauth/token */
-// const personalToken = 'c1y34MTOM1IGp3i9';
-const personalTokenTest = 'S5zRQ8u1Annr2LUA'
-const username = 'a12233_test'
+const personalToken = 'c1y34MTOM1IGp3i9';
+// const personalTokenTest = 'S5zRQ8u1Annr2LUA'
+const username = 'a12233'//'a12233_test'
 const lichessApi = 'https://lichess.org/api'
 
 console.log(__filename)
