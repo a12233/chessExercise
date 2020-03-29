@@ -10,6 +10,7 @@ app.set('view engine', 'ejs');
 const jsdom = require('jsdom')
 var Worker = require("tiny-worker");
 var worker = new Worker("stockfish.js");
+var eval = require('./backend/services/fenEval.js')
 // const { Worker } = require('worker_threads');
 // const { workerData, parentPort } = require('worker_threads')
 
@@ -102,16 +103,10 @@ const data = await pool.query('SELECT * FROM blackGames');
 })
 
 app.get('/', async function(req, res) {
-    // uploadToPouch()
-    // pouch.sync()
-    // createFen("e4 e5 Nf3 Nc6 Bb5 Nd4 Bc4 Nxf3+ Qxf3 Nf6 Nc3 c6 d3 h6 Be3 Bd6 O-O-O O-O h4 a5 g4 b5 g5 Nh7 gxh6 g6 h5 bxc4 hxg6 fxg6 Qg4 Qf6 Rdg1 Be7 Qxg6+ Qxg6 Rxg6+ Kh8 Rhg1 cxd3 Rg8+ Rxg8")
-    // run().catch(err => console.error(err))
-    // worker.postMessage("uci");
-    worker.postMessage('setoption name Ponder value false');
-    worker.postMessage('setoption name MultiPV value 3');
-    worker.postMessage('position fen r1b3rk/3pb2n/2p4P/p3p3/4P3/2NpB3/PPP2P2/2K3R1 w - - 0 22');
+    // initStockfishWebWorker()
     // worker.postMessage('go movetime ' + '1000');
-    
+    let uciArray = ['position fen r1b3rk/3pb2n/2p4P/p3p3/4P3/2NpB3/PPP2P2/2K3R1 w - - 0 22', 'go ponder depth 20']
+    eval.evaluate(uciArray); 
     res.render('pages/index');
 });
 
@@ -379,15 +374,24 @@ async function run() {
   console.log(result);
 }
 
-worker.onmessage = function (event) {
-    if (event.data.search(/^bestmove/) !== -1) {
-        var move = event.data;
-        // console.log(move)
-    }
-    if (event.data.search(/^info/) !== -1) {
-        // var move = event.data;
-        // console.log(move)
-        //info depth 12 seldepth 22 multipv 1 score cp -832 nodes 241951 nps 240987 hashfull 113 tbhits 0 time 1004 pv g1g8 h8g8 c2d3 c8a6 c1d2 h7g5 c3a4 g8h7 a4c5 e7c5 e3c5 h7h6 c5b6 g5f3 d2e2
-    }
-    console.log(event.data);
-};
+function initStockfishWebWorker(){
+    stockfishWebWorker();
+    worker.postMessage('setoption name Ponder value false');
+    worker.postMessage('setoption name MultiPV value 3');
+    worker.postMessage('position fen r1b3rk/3pb2n/2p4P/p3p3/4P3/2NpB3/PPP2P2/2K3R1 w - - 0 22');
+}
+
+function stockfishWebWorker(){
+    worker.onmessage = function (event) {
+        if (event.data.search(/^bestmove/) !== -1) {
+            var move = event.data;
+            // console.log(move)
+        }
+        if (event.data.search(/^info/) !== -1) {
+            // var move = event.data;
+            // console.log(move)
+            //info depth 12 seldepth 22 multipv 1 score cp -832 nodes 241951 nps 240987 hashfull 113 tbhits 0 time 1004 pv g1g8 h8g8 c2d3 c8a6 c1d2 h7g5 c3a4 g8h7 a4c5 e7c5 e3c5 h7h6 c5b6 g5f3 d2e2
+        }
+        console.log(event.data);
+    };
+}
