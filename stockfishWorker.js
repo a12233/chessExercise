@@ -1,28 +1,31 @@
 var tinyWorker = require("tiny-worker");
-var worker = new tinyWorker("stockfish.js");
-const { parentPort, workerData } = require('worker_threads')
+var tinyworker = new tinyWorker("stockfish.js");
+const { Worker, parentPort, workerData, threadId } = require('worker_threads')
 
 var outputObj = {
   depth: '',
   multipv: '',
   score: '',
-  moves: [] 
+  moves: [],
+  fen: ''
 }
+stockfishWebWorker();
 
-parentPort.postMessage("Ready for Analysis")
-// parentPort.on('message', msg => {
-//   worker.postMessage(msg)
-//   // console.log(msg)
-// })
+parentPort.postMessage("Thread "+threadId+" is ready for analysis")
+tinyworker.postMessage('setoption name Ponder value false');
+tinyworker.postMessage('setoption name MultiPV value 3');
+// console.time('search duration')
 
 //Parent Thread will send a FEN position and evaluation depth 
 workerData.data.forEach(i => {
-  console.log(i)
-  worker.postMessage(i)
+  if(i.includes("fen")){
+    outputObj.fen = i
+  }
+  tinyworker.postMessage(i)
 })
 
 function stockfishWebWorker(){
-  worker.onmessage = function (event) {
+  tinyworker.onmessage = function (event) {
       let tempArr = event.data.split(" ")
       if (event.data.search(/^bestmove/) !== -1) {
           var move = event.data;
@@ -41,16 +44,18 @@ function stockfishWebWorker(){
             else if( i === 'pv'){
               outputObj.moves = iterArray.splice(index)
             }
+            else if ( i == 'multipv'){
+              outputObj.multipv = iterArray[index+1]
+            }
           })
-          console.log(event.data);
-
+          // console.log(event.data);
           parentPort.postMessage(JSON.stringify(outputObj))
+          // console.timeEnd('search duration')
+
       }
       // console.log(event.data);
   };
 }
 
-stockfishWebWorker();
-worker.postMessage('setoption name Ponder value false');
-// worker.postMessage('setoption name MultiPV value 3');
+
 

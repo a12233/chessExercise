@@ -105,8 +105,17 @@ const data = await pool.query('SELECT * FROM blackGames');
 app.get('/', async function(req, res) {
     // initStockfishWebWorker()
     // worker.postMessage('go movetime ' + '1000');
-    let uciArray = ['position fen r1b3rk/3pb2n/2p4P/p3p3/4P3/2NpB3/PPP2P2/2K3R1 w - - 0 22', 'go ponder depth 20']
-    eval.evaluate(uciArray); 
+    let depth = 20; 
+    let threadArray = []
+    threadArray.push(['position fen r1bqkbnr/pp1p1ppp/8/2p5/3QP3/8/PPP2PPP/RNB1KB1R w KQkq c6 0 6', 'go ponder depth '+depth])
+    threadArray.push(['position fen rnbqkbnr/ppp2ppp/8/3p4/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4', 'go ponder depth '+depth])
+    
+    
+    threadArray.forEach(i => {
+        eval.evaluate(i)    
+    })
+
+    // eval.evaluate(uciArray); 
     res.render('pages/index');
 });
 
