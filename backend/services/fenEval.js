@@ -23,14 +23,13 @@ function done (workerArray) {
     })
 }
 module.exports ={
-    evaluate: function (uciArray){
+    evaluate: function (uciArray, workerArray){
         if (isMainThread) {
-            let workerArray = []
             if(workerArray < 5){
                 const worker = new Worker('./stockfishWorker.js', {workerData :{data: uciArray}});
                 workerArray.push(worker)
                 worker.on('message', (msg) => {
-                    console.log(msg);
+                    console.log(msg)
                 })
             }
             else{

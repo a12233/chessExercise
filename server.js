@@ -103,19 +103,7 @@ const data = await pool.query('SELECT * FROM blackGames');
 })
 
 app.get('/', async function(req, res) {
-    // initStockfishWebWorker()
-    // worker.postMessage('go movetime ' + '1000');
-    let depth = 20; 
-    let threadArray = []
-    threadArray.push(['position fen r1bqkbnr/pp1p1ppp/8/2p5/3QP3/8/PPP2PPP/RNB1KB1R w KQkq c6 0 6', 'go ponder depth '+depth])
-    threadArray.push(['position fen rnbqkbnr/ppp2ppp/8/3p4/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4', 'go ponder depth '+depth])
-    
-    
-    threadArray.forEach(i => {
-        eval.evaluate(i)    
-    })
-
-    // eval.evaluate(uciArray); 
+    testThreadsProcess()
     res.render('pages/index');
 });
 
@@ -136,6 +124,19 @@ app.get('/api/refreshDB', (req, res)=>{
     refreshDB()
 });
 
+app.get('api/evaluateFen', (req, res) =>{
+    testThreadsProcess()
+})
+function testThreadsProcess(){
+    let depth = 20; 
+    let threadArray = []
+    threadArray.push(['position fen r1bqkbnr/pp1p1ppp/8/2p5/3QP3/8/PPP2PPP/RNB1KB1R w KQkq c6 0 6', 'go ponder depth '+depth])
+    threadArray.push(['position fen rnbqkbnr/ppp2ppp/8/3p4/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4', 'go ponder depth '+depth])
+    let workerThreads = [] 
+    threadArray.forEach(i => {
+        eval.evaluate(i, workerThreads)    
+    })
+}
 // app.get('/viz', (req, res)=>{
 //     res.render('pages/viz');
 // });

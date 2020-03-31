@@ -7,11 +7,15 @@ var outputObj = {
   multipv: '',
   score: '',
   moves: [],
-  fen: ''
+  fen: '',
+  seldepth: '',
+  time: ''
 }
-stockfishWebWorker();
+var outputMap = new Map()
+var outputList = []; 
 
-parentPort.postMessage("Thread "+threadId+" is ready for analysis")
+stockfishWebWorker();
+parentPort.postMessage("Thread "+threadId+" is ready for analysis || creating child process pid:"+tinyworker.child.pid)
 tinyworker.postMessage('setoption name Ponder value false');
 tinyworker.postMessage('setoption name MultiPV value 3');
 // console.time('search duration')
@@ -19,7 +23,7 @@ tinyworker.postMessage('setoption name MultiPV value 3');
 //Parent Thread will send a FEN position and evaluation depth 
 workerData.data.forEach(i => {
   if(i.includes("fen")){
-    outputObj.fen = i
+    outputObj.fen = i.split(" ").splice(2).join(" ")
   }
   tinyworker.postMessage(i)
 })
@@ -47,11 +51,30 @@ function stockfishWebWorker(){
             else if ( i == 'multipv'){
               outputObj.multipv = iterArray[index+1]
             }
+            else if ( i == 'seldepth'){
+              outputObj.seldepth = iterArray[index+1]
+            }
+            else if (i == 'time'){
+              outputObj.time = iterArray[index+1]
+            }
           })
           // console.log(event.data);
-          parentPort.postMessage(JSON.stringify(outputObj))
+          // outputList.push(outputObj)
+          if(outputMap[outputObj.fen] == undefined){
+            outputMap[outputObj.fen] = new Map()
+            outputMap[outputObj.fen].set(outputObj.multipv, outputObj)
+            console.log(outputObj.fen + "|| "+ "multipv: "+outputObj.multipv)
+          }else{
+            outputMap[outputObj.fen].set(outputObj.multipv, outputObj) 
+            console.log(outputObj.fen + "|| "+ "multipv: "+outputObj.multipv)
+          }
+          //multipv == 3
+          if(outputMap[outputObj.fen].size == 3){
+            console.log("multipv 3 finished")
+            parentPort.postMessage(Object.fromEntries(outputMap[outputObj.fen]))
+            return
+          }
           // console.timeEnd('search duration')
-
       }
       // console.log(event.data);
   };
