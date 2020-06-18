@@ -10,6 +10,7 @@ app.set('view engine', 'ejs');
 const jsdom = require('jsdom')
 var Worker = require("tiny-worker");
 var worker = new Worker("stockfish.js");
+var eval = require('./backend/services/fenEval.js')
 // const { Worker } = require('worker_threads');
 // const { workerData, parentPort } = require('worker_threads')
 
@@ -102,17 +103,7 @@ const data = await pool.query('SELECT * FROM blackGames');
 })
 
 app.get('/', async function(req, res) {
-    // uploadToPouch()
-    // pouch.sync()
-    // createFen("e4 e5 Nf3 Nc6 Bb5 Nd4 Bc4 Nxf3+ Qxf3 Nf6 Nc3 c6 d3 h6 Be3 Bd6 O-O-O O-O h4 a5 g4 b5 g5 Nh7 gxh6 g6 h5 bxc4 hxg6 fxg6 Qg4 Qf6 Rdg1 Be7 Qxg6+ Qxg6 Rxg6+ Kh8 Rhg1 cxd3 Rg8+ Rxg8")
-    // run().catch(err => console.error(err))
-    // worker.postMessage("uci");
-    worker.postMessage('setoption name Ponder value false');
-    worker.postMessage('setoption name MultiPV value 3');
-
-    worker.postMessage('position fen r1b3rk/3pb2n/2p4P/p3p3/4P3/2NpB3/PPP2P2/2K3R1 w - - 0 22');
-    // worker.postMessage('go movetime ' + '1000');
-    
+    testThreadsProcess()
     res.render('pages/index');
 });
 
@@ -129,13 +120,26 @@ app.get('/board', function(req, res) {
     });
 });
 
-app.get('/refreshDB', (req, res)=>{
+app.get('/api/refreshDB', (req, res)=>{
     refreshDB()
 });
 
-app.get('/viz', (req, res)=>{
-    res.render('pages/viz');
-});
+app.get('api/evaluateFen', (req, res) =>{
+    testThreadsProcess()
+})
+function testThreadsProcess(){
+    let depth = 20; 
+    let threadArray = []
+    threadArray.push(['position fen r1bqkbnr/pp1p1ppp/8/2p5/3QP3/8/PPP2PPP/RNB1KB1R w KQkq c6 0 6', 'go ponder depth '+depth])
+    threadArray.push(['position fen rnbqkbnr/ppp2ppp/8/3p4/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4', 'go ponder depth '+depth])
+    let workerThreads = [] 
+    threadArray.forEach(i => {
+        eval.evaluate(i, workerThreads)    
+    })
+}
+// app.get('/viz', (req, res)=>{
+//     res.render('pages/viz');
+// });
 
 app.get('/latestGame', async (req, res) => {
     let id = await getLatestGame() 
@@ -145,11 +149,14 @@ app.get('/latestGame', async (req, res) => {
             "color":data.rows[0].color
         })
 });
-function refreshDB() {
-    parsingAllGamesFiles()
+async function refreshDB() {
+    let filepath = 'gameData/mar2020.pgn'
+    // parsingAllGamesFiles(filepath)
+    await getAllMyGames(filepath)
+    uploadToPouch(filepath)
 }
-function uploadToPouch(){
-    lr = new LineByLineReader('gameData/feb2020.pgn');
+function uploadToPouch(filepath){
+    lr = new LineByLineReader(filepath);
     lr.on('error', function (err) {
        console.log(err)
     });
@@ -230,20 +237,19 @@ function getAccountDetails(){
 }
 
 //lichess api for restreaming games into file 
-function getAllMyGames(){
+function getAllMyGames(filepath){
     return new Promise((resolve)=>{
         const options = {
-            url: lichessApi+'/games/user/a12233?perfType=rapid,classical&opening=true',
+            url: lichessApi+'/games/user/'+username+'?perfType=rapid,classical&opening=true',
             headers: {
                 'Accept': 'application/x-ndjson'
             }
           };
         request.get(options, function(err, res){
             var obj = res.body
-        }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/gameData/feb2020.pgn'));
+        }).auth(null, null, true, personalToken).pipe(fs.createWriteStream(__dirname+'/'+filepath));
         resolve('done')
     })
-
 }
 
 function insertAllGames(id, moves, color, data ) {
@@ -258,9 +264,10 @@ function insertAllGames(id, moves, color, data ) {
     })
 
 }
-//extract relevant data and write to another file, eventually write to DB 
-async function parsingAllGamesFiles(){
-    lr = new LineByLineReader('gameData/feb2020.pgn');
+//extract relevant data and write to another file, eventually write to postgres DB 
+async function parsingAllGamesFiles(filepath){
+    
+    lr = new LineByLineReader(filepath);
     lr.on('error', function (err) {
        console.log(err)
     });
@@ -272,12 +279,13 @@ async function parsingAllGamesFiles(){
         // ...do your asynchronous line processing..
         setTimeout(async function () {
             var jsonData = JSON.parse(line)
-            for(let i = 0; i < jsonData.length ; i++){
-                var obj = jsonData[i]
-                var color = ''
-                if(obj.players.white.user.id == 'a12233') color = 'white'
-                else color = 'black'
-                await insertAllGames(obj.id, obj.moves, color, obj)
+            if(jsonData.players.white.user.id == 'a12233') color = 'white' 
+            else color = 'black'
+            try {
+                await pool.query('INSERT INTO games (id, moves, color, data) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING', [jsonData.id, jsonData.moves, color, jsonData])
+            } 
+            catch (e){
+                console.log(e.stack)
             }
             // ...and continue emitting lines.
             lr.resume();
@@ -287,7 +295,6 @@ async function parsingAllGamesFiles(){
     lr.on('end', function () {
         console.log("done uploading")
     });
-
 }
 //split games by color 
 async function splitGames(){
@@ -325,19 +332,6 @@ function insertBlackGames(id, moves, data ) {
         })
         resolve("done")
     })
-}
-
-function createFen(pgn){
-    const chess = new Chess()
-    var chess1 = new Chess();
-    const startPos = chess1.fen();
-    chess.load_pgn(pgn);
-    let fens = chess.history().map(move => {
-        chess1.move(move);
-        return chess1.fen();
-      });
-    fens = [startPos, ...fens];
-    return JSON.stringify(fens)
 }
 
 //generate data on the frequency of fen position for the first 20 moves of my games
@@ -390,15 +384,24 @@ async function run() {
   console.log(result);
 }
 
-worker.onmessage = function (event) {
-    if (event.data.search(/^bestmove/) !== -1) {
-        var move = event.data;
-        // console.log(move)
-    }
-    if (event.data.search(/^info/) !== -1) {
-        // var move = event.data;
-        // console.log(move)
-        //info depth 12 seldepth 22 multipv 1 score cp -832 nodes 241951 nps 240987 hashfull 113 tbhits 0 time 1004 pv g1g8 h8g8 c2d3 c8a6 c1d2 h7g5 c3a4 g8h7 a4c5 e7c5 e3c5 h7h6 c5b6 g5f3 d2e2
-    }
-    console.log(event.data);
-};
+function initStockfishWebWorker(){
+    stockfishWebWorker();
+    worker.postMessage('setoption name Ponder value false');
+    worker.postMessage('setoption name MultiPV value 3');
+    worker.postMessage('position fen r1b3rk/3pb2n/2p4P/p3p3/4P3/2NpB3/PPP2P2/2K3R1 w - - 0 22');
+}
+
+function stockfishWebWorker(){
+    worker.onmessage = function (event) {
+        if (event.data.search(/^bestmove/) !== -1) {
+            var move = event.data;
+            // console.log(move)
+        }
+        if (event.data.search(/^info/) !== -1) {
+            // var move = event.data;
+            // console.log(move)
+            //info depth 12 seldepth 22 multipv 1 score cp -832 nodes 241951 nps 240987 hashfull 113 tbhits 0 time 1004 pv g1g8 h8g8 c2d3 c8a6 c1d2 h7g5 c3a4 g8h7 a4c5 e7c5 e3c5 h7h6 c5b6 g5f3 d2e2
+        }
+        console.log(event.data);
+    };
+}

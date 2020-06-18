@@ -1,4 +1,5 @@
-https://rexchessviz.herokuapp.com/
+https://rexchessviz.herokuapp.com/ staging
+https://chessanalysis.herokuapp.com/ production
 
 Nodejs, Jquery, Postgres, Express application hosted on Heroku
 
@@ -26,3 +27,9 @@ https://chess.stackexchange.com/questions/18182/stockfish-evaluation-of-a-positi
 https://chess.stackexchange.com/questions/5945/how-to-get-position-evaluation-with-uci
 https://chess.stackexchange.com/questions/2306/playing-chess-on-a-mac-with-stockfish-and-some-gui
 https://www.reddit.com/r/chess/comments/9ww1e1/looking_for_a_chess_database_that_can_make_use_of/
+
+
+
+Also on fly.io
+https://chessanalysis.fly.dev/
+
